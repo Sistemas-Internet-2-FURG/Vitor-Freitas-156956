@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='register.css') }}"
+    />
+    <title>Register</title>
+  </head>
+  <body>
+    <div class="form">
+      {% if error %}
+      <h1 id="alertError" class="error">{{ error }}</h1>
+      {% endif %}
+      <form action="/register" method="POST" id="form_prevent">
+        <div class="form_input">
+          <h1>Register</h1>
+          <div class="display">
+            <p>Name</p>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              placeholder="Digite seu nome"
+            />
+          </div>
+          <div class="display">
+            <p>Username</p>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              required
+              placeholder="Digite seu nome de usua..."
+            />
+          </div>
+          <div class="display">
+            <p>Password</p>
+            <input
+              id="password"
+              name="password"
+              required
+              value=""
+              type="password"
+              placeholder="coxinha123"
+            />
+          </div>
+        </div>
+
+        <div class="form_submit">
+          <button type="submit">Enviar</button>
+        </div>
+      </form>
+      <div class="registerButton">
+        <span> Não tem conta? <a href="/register">Cadastre-se!</a> </span>
+      </div>
+    </div>
+  </body>
+</html>
