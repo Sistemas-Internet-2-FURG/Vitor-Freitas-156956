@@ -1,4 +1,4 @@
-from instance.server import db
+from instance.db import db
 
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)

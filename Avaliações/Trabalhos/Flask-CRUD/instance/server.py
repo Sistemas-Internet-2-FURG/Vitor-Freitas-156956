@@ -1,13 +1,13 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from instance.db import db
+from models.authorModel import Author
+from models.bookModel import Book
 
 app = Flask(__name__)
 
 app.config.from_object('instance.config.Config')
 
-db = SQLAlchemy(app)
-from models.authorModel import Author
-from models.bookModel import Book
+db.init_app(app)
 
 with app.app_context():
     db.create_all()
