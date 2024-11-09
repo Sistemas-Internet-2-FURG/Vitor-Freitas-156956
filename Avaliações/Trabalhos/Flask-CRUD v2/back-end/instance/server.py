@@ -40,14 +40,14 @@ def logout():
 def login():
     if request.method == 'POST':
         try:
-            username = request.form.get('username')
-            password = request.form.get('password')
+            username = request.get_json().get('username')
+            password = request.get_json().get('password')
             print(f"\n USERNAME: {username}\n SENHA: {password}\n")
             if not username or not password:
-                return jsonify({"Error": "Nenhum dado enviado."}), 400
+                return jsonify({"Error": "Ausência de dados."}), 400
             user = User.get_by_username(username=username)
-            print(user)
             if user:
+                print(user)
                 if user.password == password:
                     access_token = create_access_token(identity=user.username)
                     return jsonify({"message": "Logado com sucesso!", "access_token":access_token}), 200
@@ -64,11 +64,11 @@ def login():
 def register():
     if request.method == 'POST':
         try:
-            name = request.form.get('name')
-            username = request.form.get('username')
-            password = request.form.get('password')
+            name = request.get_json().get('name')
+            username = request.get_json().get('username')
+            password = request.get_json().get('password')
             if not username or not password or not name:
-                return jsonify({"Error": "Nenhum dado enviado."}), 400
+                return jsonify({"Error": "Ausência de dados."}), 400
             user = User.get_by_username(username=username)
             print(user)
             if user:
@@ -76,7 +76,7 @@ def register():
             else:
                 new_user = User.create_user(name=name, username=username, password=password)
                 print(f"NOVO USUARIO:\n{new_user}")
-                access_token = create_access_token(identity=user.username)
+                access_token = create_access_token(identity=username)
                 return jsonify({"message": "Cadastro realizado com sucesso!", "access_token":access_token}), 201
             
         except Exception as e:
