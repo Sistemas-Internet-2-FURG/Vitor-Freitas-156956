@@ -1,13 +1,14 @@
-from flask import Flask, request, render_template, session, redirect
+from flask import Flask, request, render_template, session, redirect, jsonify
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from instance.db import db
 from models.userModel import User
 from models.taskModel import Task
 
 app = Flask(__name__, static_folder='styles')
-app.secret_key = "andrezitoprisquito"
-app.config['SESSION_PERMANENT'] = True
 
 app.config.from_object('instance.config.Config')
+
+jwt = JWTManager(app)
 
 db.init_app(app)
 
@@ -35,75 +36,71 @@ def logout():
     elif request.method == "GET":
         return render_template("logout.html")
 
-@app.route('/login', methods = ['GET', 'POST'])
+@app.route('/login', methods = ['POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        print(f"\n USERNAME: {username}\n SENHA: {password}\n")
-        if not username or not password:
-            return render_template('login.html')
-        
-        user = User.get_by_username(username=username)
-        print(user)
-        if user:
-            if user.password == password:
-                session['name'] = user.name
-                session['token'] = user.id
-                return redirect('/')
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+            print(f"\n USERNAME: {username}\n SENHA: {password}\n")
+            if not username or not password:
+                return jsonify({"Error": "Nenhum dado enviado."}), 400
+            user = User.get_by_username(username=username)
+            print(user)
+            if user:
+                if user.password == password:
+                    access_token = create_access_token(identity=user.username)
+                    return jsonify({"message": "Logado com sucesso!", "access_token":access_token}), 200
+                else:
+                    return jsonify({"Error": "Senha errada."}), 400
             else:
-                error = "Senha errada."
-                return render_template('login.html', error=error)
-        else:
-            error = "Usuário não encontrado."
-            return render_template('login.html', error=error)
+                return jsonify({"Error": "Usuário não encontrado."}), 404
             
-    elif request.method == "GET":
-        return render_template('login.html')
+        except Exception as e:
+            return jsonify({"Error": f"Erro interno do servidor.", "Descrição": f"{e}", "Função": "login()", "Linha": "40"}), 500
+ 
     
-@app.route('/register', methods = ['GET', 'POST'])
+@app.route('/register', methods = ['POST'])
 def register():
     if request.method == 'POST':
-        name = request.form.get('name')
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if not username or not password or not name:
-            return render_template('register.html')
-        user = User.get_by_username(username=username)
-        print(user)
-        if user:
-            error = "Nome de usuário já cadastrado."
-            return render_template('register.html', error=error)
-        else:
-            new_user = User.create_user(name=name, username=username, password=password)
-            print(f"NOVO USUARIO:\n{new_user}")
-            session['token'] = new_user.id
-            session['name'] = new_user.name
-            return redirect('/')
+        try:
+            name = request.form.get('name')
+            username = request.form.get('username')
+            password = request.form.get('password')
+            if not username or not password or not name:
+                return jsonify({"Error": "Nenhum dado enviado."}), 400
+            user = User.get_by_username(username=username)
+            print(user)
+            if user:
+                return jsonify({"Error": "Nome de usuário já cadastrado."}), 404
+            else:
+                new_user = User.create_user(name=name, username=username, password=password)
+                print(f"NOVO USUARIO:\n{new_user}")
+                access_token = create_access_token(identity=user.username)
+                return jsonify({"message": "Cadastro realizado com sucesso!", "access_token":access_token}), 201
             
-    elif request.method == "GET":
-        return render_template('register.html')
+        except Exception as e:
+            return jsonify({"Error": f"Erro interno do servidor.", "Descrição": f"{e}", "Função": "register()", "Linha": "64"}), 500
+ 
 
-@app.route('/checkedTasks', methods = ['GET', 'POST'])
-def homeCheckedTasks():
+@app.route('/checkedTasks/<int:id>', methods = ['GET'])
+@jwt_required()
+def homeCheckedTasks(id):
     if request.method == "GET":
-        if 'token' not in session:
-            return redirect("/login")
+        try:
+            token = get_jwt_identity()
+            print(token)
+            tasks = Task.get_by_user_id(user_id=id)
+            print(f"TASKS:\n {tasks}\n")
+            
+            return jsonify({"tasks": tasks, "access_token": token}), 200
         
-        id = session["token"]
-        name = session["name"]
-        
-        tasks = Task.get_by_user_id(user_id=id)
-        print(f"TASKS:\n {tasks}\n")
-        
-        return render_template('home.html', name=name, tasks=tasks, checkedTasks=True)
+        except Exception as e:
+            return jsonify({"Error": f"Erro interno do servidor.", "Descrição": f"{e}", "Função": "homeCheckedTasks()", "Linha": "88"}), 500
 
 @app.route('/home', methods = ['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        return redirect('/')
-            
-    elif request.method == "GET":
+def home(): 
+    if request.method == "GET":
         if 'token' not in session:
             return redirect("/login")
         
