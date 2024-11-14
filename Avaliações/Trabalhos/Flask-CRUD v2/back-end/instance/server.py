@@ -105,20 +105,45 @@ def task():
         except Exception as e:
             return jsonify({"Error": f"Erro interno do servidor.", "Descrição": f"{e}", "Função": "task()", "Linha": "83"}), 500
 
-@app.route('/task/check/<int:id>', methods = ['GET', 'POST'])
+@app.route('/task/<int:id>', methods = ['GET'])
+@jwt_required()
+def taskById(id):
+    if request.method == "GET":
+        try:
+            # VALIDA
+            id = get_jwt_identity()
+            user = User.get_by_id(user_id=id)
+            if not user:
+                return jsonify({"Error": "Usuário não encontrado."}), 404
+            
+            task_by_id = Task.get_by_id(task_id=id)
+            if task_by_id:
+                return jsonify({"task": task_by_id}), 201
+            else:
+                return jsonify({"Error": "Task não encontrada."}), 404
+            
+        except Exception as e:
+            return jsonify({"Error": f"Erro interno do servidor.", "Descrição": f"{e}", "Função": "taskById()", "Linha": "108"}), 500  
+
+@app.route('/task/check/<int:id>', methods = ['POST'])
 def taskCheck(id):
     if request.method == "GET":
-        print('oi')
-        updatedTask = Task.update_task(task_id=id, checked=True)
-        print(updatedTask.checked)
-    return redirect("/home")
+        try:
+            # VALIDA
+            id = get_jwt_identity()
+            user = User.get_by_id(user_id=id)
+            if not user:
+                return jsonify({"Error": "Usuário não encontrado."}), 404
+            
+            updatedTask = Task.update_task(task_id=id, checked=True)
+            
+            return jsonify({"message": "Task concluida com sucesso!"}), 200
+        
+        except Exception as e:
+            return jsonify({"Error": f"Erro interno do servidor.", "Descrição": f"{e}", "Função": "taskCheck()", "Linha": "129"}), 500
 
-@app.route('/task/edit/<int:id>', methods = ['GET', 'POST'])
+@app.route('/task/edit/<int:id>', methods = ['POST'])
 def taskEdit(id):
-    if request.method == "GET":
-        task = Task.get_by_id(task_id=id)
-        return render_template("editTask.html", task=task)
-    
     if request.method == "POST":
         title = request.form.get('title')
         description = request.form.get('description')
