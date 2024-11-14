@@ -3,8 +3,11 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from instance.db import db
 from models.userModel import User
 from models.taskModel import Task
+from flask_cors import CORS
 
 app = Flask(__name__, static_folder='styles')
+
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 app.config.from_object('instance.config.Config')
 
@@ -77,10 +80,10 @@ def task():
             if not user:
                 return jsonify({"Error": "Usuário não encontrado."}), 404
                 
-            tasks = Task.get_by_user_id(user_id=id)
+            tasks = Task.get_by_user_id(user_id=id_user)
             tasks = [task.to_dict() for task in tasks]
             
-            return jsonify({"tasks": tasks}), 200
+            return jsonify(tasks), 200
         
         except Exception as e:
             return jsonify({"Error": f"Erro interno do servidor.", "Descrição": f"{e}", "Função": "task()", "Linha": "83"}), 500
@@ -97,11 +100,12 @@ def task():
             # CRIA NOVA TASK
             title = request.get_json().get('title')
             description = request.get_json().get('description')
-        
+            print(title)
+            print(description)
             if not title or not description:
                 return jsonify({"Error": "Ausência de dados."}), 400
             
-            new_task = Task.create_task(title=title, description=description, user_id=id)
+            new_task = Task.create_task(title=title, description=description, user_id=id_user)
             
             return jsonify({"message": "Task criada com sucesso!", "task": new_task.to_dict()}), 201
         
