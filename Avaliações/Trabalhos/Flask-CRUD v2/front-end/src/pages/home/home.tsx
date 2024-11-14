@@ -2,27 +2,16 @@ import { useEffect, useState } from "react"
 import "./home.css"
 import { TaskCheck, TaskCreate, TaskDelete, TaskEdit, TaskGetAll } from "../../requests/task.request";
 import { useNavigate } from "react-router-dom";
-import Modal from '@mui/material/Modal';
-
-interface ITask {
-    id: number,
-    title: string,
-    description: string,
-    checked: boolean,
-    user_id: number
-}
+import { ITask, TypeCrud } from "../../interfaces/interfaces";
+import { ModalCrud } from "../../components/ModalCrud/modalCrud";
 
 export const Home = () => {
     const [tasks, setTasks] = useState([]);
     const [tasksChecked, setTasksChecked] = useState([]);
     const [toDoOrNot, setToDoOrNot] = useState(true);
     const [taskClicked, setTaskClicked] = useState<ITask>();
-    const [modal, setModal] = useState(false);
-    const [modalCheck, setModalCheck] = useState(false);
-    const [modalEdit, setModalEdit] = useState(false);
-    const [modalDelete, setModalDelete] = useState(false);
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
+    const [typeModalCrud, setTypeModalCrud] = useState<TypeCrud>(TypeCrud.NONE);
+
     const token = localStorage?.getItem("token")
     const navigate = useNavigate();
 
@@ -31,59 +20,65 @@ export const Home = () => {
         navigate("/login")
     }
 
-    const createTask = (event: any) => {
-        event.preventDefault();
+    const createTask = (title?: string, description?: string) => {
+        console.log(`DEBUG ${title}${description}`)
         try {
             if (token && title && description) {
                 const new_task = TaskCreate(token, title, description)
                 console.log(new_task)
                 navigate(0)
             }
+            return true
 
         } catch {
             console.log('error')
+            return false
         }
     }
 
-    const checkTask = (event: any) => {
-        event.preventDefault();
+    const checkTask = () => {
         try {
             if (token && taskClicked) {
                 const checked_task = TaskCheck(token, taskClicked.id)
                 console.log(checked_task)
                 navigate(0)
             }
+            return true
 
         } catch {
             console.log('error')
+            return false
         }
     }
 
-    const editTask = (event: any) => {
-        event.preventDefault();
+    const editTask = (title?: string, description?: string) => {
+        console.log(title, description)
         try {
             if (token && (title || description) && taskClicked) {
                 const updated_task = TaskEdit(token, taskClicked.id, title, description)
                 console.log(updated_task)
                 navigate(0)
             }
+            return true
 
         } catch {
             console.log('error')
+            return false
         }
     }
 
-    const deleteTask = (event: any) => {
-        event.preventDefault();
+    const deleteTask = () => {
         try {
             if (token && taskClicked) {
                 const deleted_task = TaskDelete(token, taskClicked.id)
                 console.log(deleted_task)
                 navigate(0)
             }
+            return true
 
         } catch {
             console.log('error')
+            return false
         }
     }
 
@@ -110,134 +105,10 @@ export const Home = () => {
         handleCallGets()
     }, [])
 
+
     return (
         <body>
-            <Modal
-                open={modal}
-                onClose={() => setModal(false)}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <div className="modal">
-                    <form className="modal-display" onSubmit={createTask}>
-                        <div className="display-form">
-                            <h1>Criando Task</h1>
-                            <div className="display-inputs">
-                                <p>Title</p>
-                                <input
-                                    type="text"
-                                    id="title"
-                                    name="title"
-                                    onChange={(event) => { setTitle(event.target.value) }}
-                                    required
-                                    placeholder="Digite o título"
-                                />
-                            </div>
-                            <div className="display-inputs">
-                                <p>Description</p>
-                                <input
-                                    id="description"
-                                    name="description"
-                                    onChange={(event) => { setDescription(event.target.value) }}
-                                    required
-                                    type="text"
-                                    placeholder="Digite a descrição"
-                                />
-                            </div>
-                        </div>
-
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form" type="submit">Enviar</button>
-                        </div>
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form-red" onClick={() => setModal(false)}>Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </Modal>
-            <Modal
-                open={modalCheck}
-                onClose={() => setModalCheck(false)}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <div className="modal">
-                    <form className="modal-display" onSubmit={checkTask}>
-                        <div className="display-form">
-                            <h1>Deseja concluir a task {taskClicked?.title}?</h1>
-                        </div>
-
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form" type="submit">Enviar</button>
-                        </div>
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form-red" onClick={() => setModalCheck(false)}>Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </Modal>
-            <Modal
-                open={modalDelete}
-                onClose={() => setModalDelete(false)}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <div className="modal">
-                    <form className="modal-display" onSubmit={deleteTask}>
-                        <div className="display-form">
-                            <h1>Deseja deletar a task {taskClicked?.title}?</h1>
-                        </div>
-
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form" type="submit">Enviar</button>
-                        </div>
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form-red" onClick={() => setModalDelete(false)}>Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </Modal>
-            <Modal
-                open={modalEdit}
-                onClose={() => setModalEdit(false)}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <div className="modal">
-                    <form className="modal-display" onSubmit={editTask}>
-                        <div className="display-form">
-                            <h1>Editando a Task {taskClicked?.title}</h1>
-                            <div className="display-inputs">
-                                <p>Title</p>
-                                <input
-                                    type="text"
-                                    id="title"
-                                    name="title"
-                                    onChange={(event) => { setTitle(event.target.value) }}
-                                    placeholder={taskClicked?.title}
-                                />
-                            </div>
-                            <div className="display-inputs">
-                                <p>Description</p>
-                                <input
-                                    id="description"
-                                    name="description"
-                                    onChange={(event) => { setDescription(event.target.value) }}
-                                    type="text"
-                                    placeholder={taskClicked?.description}
-                                />
-                            </div>
-                        </div>
-
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form" type="submit">Enviar</button>
-                        </div>
-                        <div style={{ width: "100%" }}>
-                            <button className="button-form-red" onClick={() => { setModalEdit(false), setTitle(""), setDescription("") }}>Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </Modal>
+            <ModalCrud type={typeModalCrud} taskClicked={taskClicked} create_function={createTask} edit_function={editTask} check_function={checkTask} delete_function={deleteTask} stateTypeModalCrud={setTypeModalCrud} />
             <div className="bar">
                 <div className="pages" onClick={() => setToDoOrNot(true)}><p>A Fazer</p></div>
                 <div className="pages" onClick={() => setToDoOrNot(false)}><p>Feitas</p></div>
@@ -249,19 +120,19 @@ export const Home = () => {
                     <ul className="task-list">
                         {tasks[0] ? tasks?.map((value: any, index: number) => {
                             return (
-                                <li className="task-item">
+                                <li className="task-item" key={index}>
                                     <span className="task-title">{value.title}</span>
                                     <p className="task-description">{value.description}</p>
                                     <div className="task-actions">
-                                        <button className="btn check-btn" onClick={() => { setModalCheck(true), setTaskClicked(value) }}>✔️</button>
-                                        <button className="btn edit-btn" onClick={() => { setModalEdit(true), setTaskClicked(value) }}>✏️</button>
-                                        <button className="btn delete-btn" onClick={() => { setModalDelete(true), setTaskClicked(value) }}>❌</button>
+                                        <button className="btn check-btn" onClick={() => { setTypeModalCrud(TypeCrud.CHECK), setTaskClicked(value) }}>✔️</button>
+                                        <button className="btn edit-btn" onClick={() => { setTypeModalCrud(TypeCrud.EDIT), setTaskClicked(value) }}>✏️</button>
+                                        <button className="btn delete-btn" onClick={() => { setTypeModalCrud(TypeCrud.DELETE), setTaskClicked(value) }}>❌</button>
                                     </div>
                                 </li>
                             )
                         }) : null}
                     </ul>
-                    <button className="createTask" type="submit" onClick={() => { setModal(true) }}>Criar nova task</button>
+                    <button className="createTask" onClick={() => { setTypeModalCrud(TypeCrud.CREATE) }}>Criar nova task</button>
                 </div>
                 :
                 <div className="task-container">
@@ -269,11 +140,11 @@ export const Home = () => {
                     <ul className="task-list">
                         {tasksChecked[0] ? tasksChecked.map((value: any, index: number) => {
                             return (
-                                <li className="task-item">
+                                <li className="task-item" key={index}>
                                     <span className="task-title">{value.title}</span>
                                     <p className="task-description">{value.description}</p>
                                     <div className="task-actions">
-                                        <button className="btn delete-btn" onClick={() => { setModalDelete(true), setTaskClicked(value) }}>❌</button>
+                                        <button className="btn delete-btn" onClick={() => { setTypeModalCrud(TypeCrud.DELETE), setTaskClicked(value) }}>❌</button>
                                     </div>
                                 </li>
                             )

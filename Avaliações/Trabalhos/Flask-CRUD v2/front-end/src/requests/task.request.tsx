@@ -56,7 +56,7 @@ export async function TaskCreate(token: string, title: string, description: stri
     }
 }
 
-export async function TaskEdit(token: string, id: number, title: string, description: string): Promise<any> {
+export async function TaskEdit(token: string, id: number, title?: string, description?: string): Promise<any> {
     try {
         const result = await api.put(`/task/${id}`, {
             "title": title, "description": description
