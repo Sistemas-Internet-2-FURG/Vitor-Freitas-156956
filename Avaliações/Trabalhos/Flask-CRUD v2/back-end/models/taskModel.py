@@ -44,8 +44,8 @@ class Task(db.Model):
     def update_task(self, task_id, title=None, description=None, user_id=None, checked=None):
         """Atualiza uma tarefa pelo ID."""
         task = self.get_by_id(task_id)
-        print(task.checked)
         if task:
+            print(task.checked)
             if title:
                 if len(title) > 30:
                     raise ValueError("O título não pode ter mais de 30 caracteres.")
@@ -62,3 +62,13 @@ class Task(db.Model):
             db.session.commit()  # Confirma as alterações
             return task
         return None
+    
+    #   Transforma para dicionário.
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "user_id": self.user_id,
+            "checked": self.checked
+        }
